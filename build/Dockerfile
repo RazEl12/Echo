@@ -1,17 +1,19 @@
 FROM debian:bookworm-slim
 
+ARG NGINX_VERSION=1.25.5
+
 RUN apt-get update && apt-get install -y \
     build-essential libpcre3-dev zlib1g-dev libssl-dev wget patch checkinstall
 
 WORKDIR /build
 
-RUN wget https://nginx.org/download/nginx-1.25.2.tar.gz && \
-    tar -zxvf nginx-1.25.2.tar.gz
+RUN wget https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && \
+    tar -zxvf nginx-${NGINX_VERSION}.tar.gz
 
-COPY patches/CVE-2023-44487.patch /build/
-RUN cd nginx-1.25.2 && patch -p1 < ../CVE-2023-44487.patch
+COPY patches/CVE-2026-97629.patch /build/
+RUN cd nginx-${NGINX_VERSION} && patch -p1 < ../CVE-2026-97629.patch
 
-RUN cd nginx-1.25.2 && \
+RUN cd nginx-${NGINX_VERSION} && \
     ./configure \
     --prefix=/etc/nginx \
     --sbin-path=/usr/sbin/nginx \
@@ -27,7 +29,7 @@ RUN cd nginx-1.25.2 && \
        --install=no \
        --fstrans=no \
        --pkgname=custom-nginx \
-       --pkgversion=1.25.2 \
+       --pkgversion=${NGINX_VERSION} \
        --pkgrelease=1 \
        --maintainer="raz@example.com" \
        make install
