@@ -1,0 +1,25 @@
+{
+    "@context": "https://openvex.dev/ns/v0.2.0",
+    "@id": "https://echo.local/vex/nginx-cve-2023-44487",
+    "author": "Raz Elezra",
+    "timestamp": "2026-10-26T18:00:00Z",
+    "version": 1,
+    "statements": [
+        {
+            "vulnerability": {
+                "name": "CVE-2023-44487"
+            },
+            "products": [
+                {
+                    "@id": "pkg:deb/custom-nginx@1.25.2-1"
+                },
+                {
+                    "@id": "pkg:oci/custom-nginx"
+                }
+            ],
+            "status": "not_affected",
+            "justification": "vulnerable_code_not_present",
+            "impact_statement": "The HTTP/2 rapid reset vulnerability was manually patched via a backport from upstream."
+        }
+    ]
+}
