@@ -14,8 +14,8 @@ build-image: build-builder
 build: build-image
 
 # Run compatibility tests
-test: build-image
-	cd test && python3 -m pytest test_compat.py -v
+test:
+	cd test && python3 -m pytest test_nginx.py -v
 
 # Cleanup
 clean:
