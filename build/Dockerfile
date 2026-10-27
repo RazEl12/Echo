@@ -3,7 +3,8 @@ FROM debian:bookworm-slim
 ARG NGINX_VERSION=1.25.5
 
 RUN apt-get update && apt-get install -y \
-    build-essential libpcre3-dev zlib1g-dev libssl-dev wget patch checkinstall
+    build-essential libpcre3-dev zlib1g-dev libssl-dev wget patch checkinstall \
+    libxslt1-dev libgd-dev libgeoip-dev
 
 WORKDIR /build
 
@@ -55,6 +56,10 @@ RUN cd nginx-${NGINX_VERSION} && \
     --with-stream_realip_module \
     --with-stream_ssl_module \
     --with-stream_ssl_preread_module \
+    --with-http_xslt_module=dynamic \
+    --with-http_image_filter_module=dynamic \
+    --with-http_geoip_module=dynamic \
+    --with-stream_geoip_module=dynamic \
     && make \
     && checkinstall -D -y \
        --install=no \

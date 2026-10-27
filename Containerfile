@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
     libpcre3 \
     zlib1g \
     libssl3 \
+    libxslt1.1 \
+    libgd3 \
+    libgeoip1 \
     gettext-base \
     && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libssl3)" ge "${LIBSSL3_MIN_VERSION}" \
     && dpkg -i /tmp/nginx_*.deb \
@@ -25,6 +28,7 @@ RUN groupadd --system --gid 101 nginx \
     && mkdir -p /var/run /var/cache/nginx \
     && mkdir -p /etc/nginx/conf.d /usr/share/nginx \
     && mv /etc/nginx/html /usr/share/nginx/html \
+    && ln -s /usr/lib/nginx/modules /etc/nginx/modules \
     && chown -R nginx:nginx /etc/nginx /var/log/nginx /var/cache/nginx /var/run
 
 COPY nginx.conf /etc/nginx/nginx.conf
