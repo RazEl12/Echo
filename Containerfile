@@ -2,6 +2,9 @@ FROM nginx-builder AS builder-stage
 
 FROM debian:bookworm-slim
 
+ENV NGINX_VERSION=1.25.5
+ENV PKG_RELEASE=1~bookworm
+
 COPY --from=builder-stage /build/nginx-1.25.5/nginx_1.25.5-1_*.deb /tmp/
 
 ARG LIBSSL3_MIN_VERSION=3.0.18-1~deb12u2

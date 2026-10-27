@@ -175,6 +175,7 @@ CVE-2026-97629 changes), the entrypoint's template substitution, and behavior un
 
 - The njs module and the `-debug` variants of the modules are not built.
 - `--with-cc-opt` and `--with-ld-opt` (Debian's build flags) are not reproduced.
+- The `NJS_VERSION` and `NJS_RELEASE` environment variables are not set, because njs is not built.
 - Built and tested on arm64 only.
 - TLS session resumption, `stream`, `mail`, HTTP/2 and HTTP/3 are not covered by the tests.
 
