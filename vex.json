@@ -1,25 +1,24 @@
 {
     "@context": "https://openvex.dev/ns/v0.2.0",
-    "@id": "https://echo.local/vex/nginx-cve-2023-44487",
+    "@id": "https://echo.local/vex/custom-nginx-cve-2026-97629",
     "author": "Raz Elezra",
-    "timestamp": "2026-10-26T18:00:00Z",
+    "timestamp": "2026-10-27T00:00:00Z",
     "version": 1,
     "statements": [
         {
             "vulnerability": {
-                "name": "CVE-2023-44487"
+                "name": "CVE-2026-97629"
             },
             "products": [
                 {
-                    "@id": "pkg:deb/custom-nginx@1.25.2-1"
+                    "@id": "pkg:deb/debian/nginx@1.25.5-1"
                 },
                 {
-                    "@id": "pkg:oci/custom-nginx"
+                    "@id": "pkg:deb/debian/custom-nginx@1.25.5-1"
                 }
             ],
-            "status": "not_affected",
-            "justification": "vulnerable_code_not_present",
-            "impact_statement": "The HTTP/2 rapid reset vulnerability was manually patched via a backport from upstream."
+            "status": "fixed",
+            "impact_statement": "Fixed by backporting nginx upstream commit 1916f26e6ca49296568633d309777e36527e5bb2 (SSL: synced all session ticket keys to the worker process) onto 1.25.5. See build/patches/CVE-2026-97629.patch. The version string is unchanged, so scanners still match by version."
         }
     ]
 }

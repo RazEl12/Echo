@@ -28,7 +28,7 @@ RUN cd nginx-${NGINX_VERSION} && \
     && checkinstall -D -y \
        --install=no \
        --fstrans=no \
-       --pkgname=custom-nginx \
+       --pkgname=nginx \
        --pkgversion=${NGINX_VERSION} \
        --pkgrelease=1 \
        --maintainer="raz@example.com" \

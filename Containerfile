@@ -2,7 +2,7 @@ FROM nginx-builder AS builder-stage
 
 FROM debian:bookworm-slim
 
-COPY --from=builder-stage /build/nginx-1.25.5/custom-nginx_1.25.5-1_*.deb /tmp/
+COPY --from=builder-stage /build/nginx-1.25.5/nginx_1.25.5-1_*.deb /tmp/
 
 ARG LIBSSL3_MIN_VERSION=3.0.18-1~deb12u2
 
@@ -13,8 +13,8 @@ RUN apt-get update && apt-get install -y \
     libssl3 \
     gettext-base \
     && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libssl3)" ge "${LIBSSL3_MIN_VERSION}" \
-    && dpkg -i /tmp/custom-nginx_*.deb \
-    && rm /tmp/custom-nginx_*.deb \
+    && dpkg -i /tmp/nginx_*.deb \
+    && rm /tmp/nginx_*.deb \
     && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --system --gid 101 nginx \
