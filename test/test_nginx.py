@@ -5,23 +5,29 @@ import subprocess
 import time
 import pytest
 import os
+import ssl
 
 ORIG_IMAGE = "nginx:1.25-bookworm"
 MINE_IMAGE = "custom-nginx:latest"
 ORIG_PORT = 8081
 MINE_PORT = 8082
 CUSTOM_CONF = os.path.join(os.path.dirname(os.path.abspath(__file__)), "custom.conf")
-
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+SSL_CONF = os.path.join(TEST_DIR, "ssl.conf")
+CERTS_DIR = os.path.join(TEST_DIR, "certs")
 # These headers change between builds or requests, so they say nothing about behavior.
 IGNORED_HEADERS = {"date", "last-modified", "etag"}
 
 
-def start(image, name, port, conf=None):
-    """Run a container in the background and publish its port 80 on `port`.
-    If `conf` is given, mount it as the default server config."""
-    cmd = ["docker", "run", "-d", "--rm", "--name", name, "-p", f"{port}:80"]
+def start(image, name, port, conf=None, certs=None, container_port=80):
+    """Run a container in the background and publish its port `container_port` on `port`.
+    If `conf` is given, mount it as the default server config.
+    If `certs` is given, mount that directory at /certs."""
+    cmd = ["docker", "run", "-d", "--rm", "--name", name, "-p", f"{port}:{container_port}"]
     if conf:
         cmd += ["-v", f"{conf}:/etc/nginx/conf.d/default.conf:ro"]
+    if certs:
+        cmd += ["-v", f"{certs}:/certs:ro"]
     subprocess.run(cmd + [image], check=True, capture_output=True)
 
 def stop(*names):
@@ -29,9 +35,16 @@ def stop(*names):
     subprocess.run(["docker", "stop", *names], capture_output=True)
 
 
-def request(port, method, path, body=None):
-    """Send one HTTP request. Return (status, headers, body)."""
-    conn = http.client.HTTPConnection("localhost", port, timeout=10)
+def request(port, method, path, body=None, https=False):
+    """Send one HTTP(S) request. Return (status, headers, body)."""
+    if https:
+        # The test certificate is self-signed, so skip verification.
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        conn = http.client.HTTPSConnection("localhost", port, timeout=10, context=ctx)
+    else:
+        conn = http.client.HTTPConnection("localhost", port, timeout=10)
     try:
         conn.request(method, path, body=body)
         resp = conn.getresponse()
@@ -42,12 +55,12 @@ def request(port, method, path, body=None):
         conn.close()
 
 
-def wait_ready(port, timeout=15, path="/"):
+def wait_ready(port, timeout=15, path="/", https=False):
     """Poll until nginx answers an HTTP request, or fail after `timeout` seconds."""
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            request(port, "GET", path)
+            request(port, "GET", path, https=https)
             return
         except (OSError, http.client.HTTPException):
             time.sleep(0.3)
@@ -80,10 +93,26 @@ def custom_servers():
     finally:
         stop("t-orig-c", "t-mine-c")
 
-def assert_same(method, path, body=None, ports=(ORIG_PORT, MINE_PORT)):
+SSL_PORTS = (8085, 8086)
+
+
+@pytest.fixture(scope="module")
+def ssl_servers():
+    """Both containers serve HTTPS on port 443 with test/ssl.conf and test/certs."""
+    stop("t-orig-s", "t-mine-s")
+    start(ORIG_IMAGE, "t-orig-s", SSL_PORTS[0], SSL_CONF, CERTS_DIR, container_port=443)
+    start(MINE_IMAGE, "t-mine-s", SSL_PORTS[1], SSL_CONF, CERTS_DIR, container_port=443)
+    try:
+        wait_ready(SSL_PORTS[0], path="/hello", https=True)
+        wait_ready(SSL_PORTS[1], path="/hello", https=True)
+        yield
+    finally:
+        stop("t-orig-s", "t-mine-s")
+
+def assert_same(method, path, body=None, ports=(ORIG_PORT, MINE_PORT), https=False):
     """Send the same request to both containers and require identical answers."""
-    orig = request(ports[0], method, path, body)
-    mine = request(ports[1], method, path, body)
+    orig = request(ports[0], method, path, body, https=https)
+    mine = request(ports[1], method, path, body, https=https)
     assert orig == mine, f"{method} {path} differs:\noriginal: {orig}\nmine:     {mine}"
 
 def raw(port, data):
@@ -135,3 +164,7 @@ def test_malformed_request(servers):
     orig = raw(ORIG_PORT, data)
     mine = raw(MINE_PORT, data)
     assert orig.split(b"\r\n\r\n")[0].split(b"\r\n")[0] == mine.split(b"\r\n\r\n")[0].split(b"\r\n")[0]
+
+
+def test_https_hello(ssl_servers):
+    assert_same("GET", "/hello", ports=SSL_PORTS, https=True)
