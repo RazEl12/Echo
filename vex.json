@@ -12,9 +12,6 @@
             "products": [
                 {
                     "@id": "pkg:deb/debian/nginx@1.25.5-1"
-                },
-                {
-                    "@id": "pkg:deb/debian/custom-nginx@1.25.5-1"
                 }
             ],
             "status": "fixed",
