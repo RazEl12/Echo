@@ -18,7 +18,7 @@ make test    # starts the original and the new image, compares their responses
 Notes:
 - The image is tagged `custom-nginx:latest` and `custom-nginx:<timestamp>`.
 - Built and tested on arm64 (Apple Silicon). The `.deb` file name contains the
-  architecture, so the build also works on amd64.
+  architecture, so the build should also work on amd64 (not tested).
 
 ## Image size
 
@@ -63,10 +63,10 @@ The backport does not change the version string (still `1.25.5-1`), and Trivy an
 by package name and version, so they keep reporting CVE-2026-97629. `vex.json` (OpenVEX)
 declares it `fixed` for `pkg:deb/debian/nginx@1.25.5-1`. Scanning with `--vex` makes it disappear:
 
-| Scan | Without VEX | With `vex.json` |
-|---|---|---|
-| Grype (nginx findings) | 8, includes CVE-2026-97629 | 7, CVE-2026-97629 gone |
-| Trivy (total) | 482 | 481, CVE-2026-97629 gone |
+| Scan | nginx only, without VEX | nginx only, with `vex.json` | Total, without VEX | Total, with `vex.json` |
+|---|---|---|---|---|
+| Grype | 8, includes CVE-2026-97629 | 7, CVE-2026-97629 gone | 451 | 450 |
+| Trivy | 8, includes CVE-2026-97629 | 7, CVE-2026-97629 gone | 482 | 481 |
 
 ```bash
 grype custom-nginx:latest --vex vex.json
@@ -219,5 +219,8 @@ CVE-2026-97629 changes), the entrypoint's template substitution, and behavior un
   credits ran out quickly, so I moved on to Claude Code.
 - **Claude Code:** used for the rest. It explained each step, helped design the compatibility
   test, checked CVE facts against nginx.org and the Debian security tracker, and helped write the
-  README. It also made mistakes, for example an early claim that Trivy never reported nginx, so I
-  checked its claims against the scan reports.
+  README. It also made mistakes. It stated that CVE-2023-44487 was fixed in 1.25.3 without
+  checking, and I could not confirm that, so the README now says "status not confirmed". It also
+  left libgd3 out of the Containerfile, which would have broken the image_filter module at
+  runtime; I caught that when reviewing the build again. I now check its claims against
+  nginx.org, the Debian security tracker and the scan reports.

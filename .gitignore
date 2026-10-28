@@ -2,4 +2,3 @@
 .claude/
 __pycache__/
 .pytest_cache/
-.targil.txt
