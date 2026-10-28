@@ -160,6 +160,7 @@ def test_post_too_large(custom_servers):
 
 
 def test_malformed_request(servers):
+    """Garbage instead of HTTP: compare only the status line, since error pages may differ."""
     data = b"THIS IS NOT HTTP\r\n\r\n"
     orig = raw(ORIG_PORT, data)
     mine = raw(MINE_PORT, data)
